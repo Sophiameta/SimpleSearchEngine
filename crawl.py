@@ -38,7 +38,7 @@ for url in seed:
                 visited.append(tag['href'])
 
 #print the link structure
-for site, links in linksOnSite.items():
+for site, links in sorted(linksOnSite.items()):
     structure = site + ":"
     first = True
     for link in links:
