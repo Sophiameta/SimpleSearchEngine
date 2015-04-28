@@ -3,6 +3,7 @@ __author__ = 's0539720'
 from urllib.parse import urlparse
 import urllib.request
 from bs4 import BeautifulSoup
+import collections
 
 
 seed = ["http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d01.html",
@@ -12,6 +13,7 @@ urls = [] #URLs that have to be visited
 visited = [] #already visited URLs
 linksOnSite = {} #title of site as key, links of the site as values
 titleOfSite = {} #url as key, title of the site as value
+linkStructure = {} #title of sites as key, titles of sites that are linked as values
 
 #crawl every URL in seed list + URLs found on the websites
 for url in seed:
@@ -37,14 +39,14 @@ for url in seed:
                 urls.append(tag['href'])
                 visited.append(tag['href'])
 
-#print the link structure
+#create link structure and order alphabetically
 for site, links in sorted(linksOnSite.items()):
-    structure = site + ":"
-    first = True
+    linkStructure[site] = []
     for link in links:
-        if first:
-            first = False
-            structure = structure + titleOfSite[link]
-        else:
-            structure = structure + "," + titleOfSite[link]
-    print(structure)
+        linkStructure[site].append(titleOfSite[link])
+linkStructure = collections.OrderedDict(sorted(linkStructure.items()))
+
+
+#print the link structure
+for site in linkStructure:
+    print(site + ':' + ",".join(linkStructure[site]))
