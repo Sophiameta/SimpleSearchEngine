@@ -2,17 +2,19 @@ __author__ = 's0539720'
 
 import collections
 import numpy as np
+from crawl import Crawler
 
-linkStructure = {
-    "d01": ["d02", "d03", "d04"],
-    "d02": ["d03", "d04", "d01", "d05"],
-    "d03": ["d04", "d01", "d02", "d05"],
-    "d04": ["d01", "d02", "d03", "d05"],
-    "d05": ["d04"],
-    "d06": ["d07"],
-    "d07": ["d06"],
-    "d08": []
-}
+
+LINKS = ["http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d01.html",
+"http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d06.html",
+"http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d08.html"]
+
+myCrawler = Crawler(LINKS)
+print("Crawling pages...")
+
+linkStructure = myCrawler.getlinkstructure()
+
+
 
 d = 0.95
 t = 1 - d
@@ -65,6 +67,7 @@ while diff > delta:
     step += 1
 
 #print sites
+print("\nCalculating pageranks...")
 sites = "            "
 for site in sorted(linkStructure.keys()):
     sites = sites + site + "       "
