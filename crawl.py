@@ -13,9 +13,10 @@ class Crawler:
         self.linksOnSite = {} #title of site as key, links of the site as values
         self.titleOfSite = {} #url as key, title of the site as value
         self.linkStructure = {} #title of sites as key, titles of sites that are linked as values
+        self.printStructure = ""
 
     #crawl every URL in seed list + URLs found on the websites
-    def getlinkstructure(self):
+    def getVisited(self):
         for url in self.seed:
             self.urls.append(url)
             self.visited.append(url)
@@ -31,26 +32,33 @@ class Crawler:
                 self.linksOnSite[title] = []
                 self.titleOfSite[self.urls[0]] = title
                 self.urls.pop(0)
-
                 for tag in soup.findAll('a',href=True):
                     tag['href'] = urllib.parse.urljoin(url, tag['href'])
                     self.linksOnSite[title].append(tag['href'])
                     if tag['href'] not in self.visited:
                         self.urls.append(tag['href'])
                         self.visited.append(tag['href'])
+        return self.visited
 
-        #create link structure and order alphabetically
+    #create link structure and order alphabetically
+    def getLinkStructure(self):
+        self.getVisited()
         for site, links in sorted(self.linksOnSite.items()):
             self.linkStructure[site] = []
             for link in links:
                 self.linkStructure[site].append(self.titleOfSite[link])
         self.linkStructure = collections.OrderedDict(sorted(self.linkStructure.items()))
-
         lS = {}
-        #print the link structure
         for site in self.linkStructure:
             lS[site] = self.linkStructure[site]
-            print(site + ':' + ",".join(self.linkStructure[site]))
+            self.printStructure += (site + ':' + ",".join(self.linkStructure[site]) + "\n")
         return lS
+
+    #print the link structure
+    def printLinkStructure(self):
+        if len(self.printStructure) == 0:
+            print("Not crawled yet!")
+        else:
+            print(self.printStructure)
 
 

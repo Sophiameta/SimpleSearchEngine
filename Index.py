@@ -4,12 +4,13 @@ import urllib.request
 from bs4 import BeautifulSoup
 import re
 import collections
+from crawl import Crawler
+from PageRank import PageRank
 
 def normalize(text):
     text = text.lower()
     words = re.compile('\w+').findall(text)
     return words
-
 
 stopwords = [
     'd01', 'd02', 'd03', 'd04', 'd05', 'd06', 'd07', 'd08',
@@ -18,15 +19,20 @@ stopwords = [
     'that', 'the', 'this', 'to', 'we'
 ]
 
-urls = ["http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d01.html",
-        "http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d02.html",
-        "http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d03.html",
-        "http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d04.html",
-        "http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d05.html",
-        "http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d06.html",
-        "http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d07.html",
-        "http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d08.html"
-]
+LINKS = ["http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d01.html",
+"http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d06.html",
+"http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d08.html"]
+
+myCrawler = Crawler(LINKS)
+myPageRank = PageRank(myCrawler.getLinkStructure())
+
+urls = myCrawler.getVisited()
+
+print("Crawling pages...")
+myCrawler.printLinkStructure()
+
+print("Calculating pageranks...")
+myPageRank.printPageRank()
 
 index = {}
 
@@ -50,5 +56,7 @@ for url in urls:
 index = collections.OrderedDict(sorted(index.items()))
 
 #print index
+print("\nBuilding index...")
+
 for word in index:
-    print(word + ", df:" + str(len(index[word])) + " -> " + str(index[word]))
+    print("("+ word + ", df:" + str(len(index[word])) + ")" + " -> " + str(list(index[word].items())))
