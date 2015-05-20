@@ -4,59 +4,44 @@ import urllib.request
 from bs4 import BeautifulSoup
 import re
 import collections
-from crawl import Crawler
-from PageRank import PageRank
 
-def normalize(text):
-    text = text.lower()
-    words = re.compile('\w+').findall(text)
-    return words
+class Index:
 
-stopwords = [
-    'd01', 'd02', 'd03', 'd04', 'd05', 'd06', 'd07', 'd08',
-    'a', 'also', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'do',
-    'for', 'have', 'is', 'in', 'it', 'of', 'or', 'see', 'so',
-    'that', 'the', 'this', 'to', 'we'
-]
+    def __init__(self, stopwords, urls):
+        self.__stopwords = stopwords
+        self.__urls = urls
+        self.__index = {}
+        self.__calculateIndex()
 
-LINKS = ["http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d01.html",
-"http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d06.html",
-"http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d08.html"]
+    @staticmethod
+    def normalize(text):
+        text = text.lower()
+        words = re.compile('\w+').findall(text)
+        return words
 
-myCrawler = Crawler(LINKS)
-myPageRank = PageRank(myCrawler.getLinkStructure())
+    def __calculateIndex(self):
+        for url in self.__urls:
+            website = urllib.request.urlopen(url).read()
+            soup = BeautifulSoup(website)
+            text = soup.get_text()
+            words = self.normalize(text)
+            title = soup.title.string
 
-urls = myCrawler.getVisited()
+            for word in words:
+                if word not in self.__stopwords:
+                    if word not in self.__index:
+                        self.__index[word] = {}
+                        self.__index[word][title] = 1
+                    elif title not in self.__index[word]:
+                        self.__index[word][title] = 1
+                    else:
+                        self.__index[word][title] += 1
+        self.__index = collections.OrderedDict(sorted(self.__index.items()))
 
-print("Crawling pages...")
-myCrawler.printLinkStructure()
+    def getIndex(self):
+        return self.__index
 
-print("Calculating pageranks...")
-myPageRank.printPageRank()
-
-index = {}
-
-
-for url in urls:
-    website = urllib.request.urlopen(url).read()
-    soup = BeautifulSoup(website)
-    text = soup.get_text()
-    words = normalize(text)
-    title = soup.title.string
-
-    for word in words:
-        if word not in stopwords:
-            if word not in index:
-                index[word] = {}
-                index[word][title] = 1
-            elif title not in index[word]:
-                index[word][title] = 1
-            else:
-                index[word][title] += 1
-index = collections.OrderedDict(sorted(index.items()))
-
-#print index
-print("\nBuilding index...")
-
-for word in index:
-    print("("+ word + ", df:" + str(len(index[word])) + ")" + " -> " + str(list(index[word].items())))
+    #print index
+    def printIndex(self):
+        for word in self.__index:
+            print(word + ", df:" + str(len(self.__index[word])) + " -> " + str(self.__index[word]))

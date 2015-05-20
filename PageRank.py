@@ -2,78 +2,85 @@ __author__ = 's0539720'
 
 import collections
 import numpy as np
-from crawl import Crawler
 
 
 class PageRank:
-    def __init__(self, lS):
-        self.linkStructure = lS
-        self.d = 0.95
-        self.t = 1 - self.d
-        self.delta = 0.04
-        self.N = len(lS) + 0.0
-        self.diff = 1.0
-        self.diffInStep = [0.0]
-        self.step = 1
-        self.pageranks = [[1/self.N for i in range(len(lS))]]
+    def __init__(self, linkStructure):
+        self.__linkStructure = linkStructure
+        self.__d = 0.95
+        self.__t = 1 - self.__d
+        self.__delta = 0.04
+        self.__diffInStep = [0.0]
+        self.__N = len(self.__linkStructure) + 0.0
+        self.__pageRanks = [[1/self.__N for i in range(len(self.__linkStructure))]]
+        __transitions = self.__getTransitionProbabilities()
+        self.__calculatePageRank(__transitions)
 
-    def getTransitionProbabilities(self):
+    def __getTransitionProbabilities(self):
         transitionProbabilities = {}
 
         #create transition table
-        for col in self.linkStructure:
-            for row in self.linkStructure:
+        for col in self.__linkStructure:
+            for row in self.__linkStructure:
                 transitionProbabilities[(col, row)] = 0
 
         #fill transition table and order alphabetically
-        for site in self.linkStructure:
-            outlinks = len(self.linkStructure[site])
+        for site in self.__linkStructure:
+            outlinks = len(self.__linkStructure[site])
             if outlinks > 0:
-                for link in self.linkStructure[site]:
-                    transitionProbabilities[(site, link)] = (1.0 / outlinks) * self.d + (self.t/self.N)
-                for link in self.linkStructure:
+                for link in self.__linkStructure[site]:
+                    transitionProbabilities[(site, link)] = (1.0 / outlinks) * self.__d + (self.__t/self.__N)
+                for link in self.__linkStructure:
                     if transitionProbabilities[(site, link)] == 0:
-                        transitionProbabilities[(site, link)] = self.t/self.N
+                        transitionProbabilities[(site, link)] = self.__t/self.__N
             else:
-                for link in self.linkStructure:
-                    transitionProbabilities[(site, link)] = 1.0/self.N
+                for link in self.__linkStructure:
+                    transitionProbabilities[(site, link)] = 1.0/self.__N
         transitionProbabilities = collections.OrderedDict(sorted(transitionProbabilities.items()))
-        return transitionProbabilities
 
-    def getTransitions(self):
-        #transitionProbabilities dict to matrix like array
+        #transform transitionProbabilities dictionary into a matrixlike array
         transitions = []
         k = 0
-        for i in range(len(self.linkStructure)):
+        for i in range(len(self.__linkStructure)):
             transitions.append([])
-            for j in range(len(self.linkStructure)):
-                transitions[i].append(list(self.getTransitionProbabilities().values())[k])
+            for j in range(len(self.__linkStructure)):
+                transitions[i].append(list(transitionProbabilities.values())[k])
                 k += 1
         return transitions
 
     #calculate pageranks
-    def getPageRank(self):
-        while self.diff > self.delta:
-            self.diff = 0.0
-            pagerank = list(np.array(np.asarray(np.matrix(self.pageranks[self.step - 1]) * np.matrix(self.getTransitions()))).reshape(-1,)) # matrix to list
-            self.pageranks.append(pagerank)
-            for i in range(len(self.linkStructure)):
-                self.diff += abs(self.pageranks[self.step][i] - self.pageranks[self.step-1][i])
-            self.diffInStep.append(self.diff)
-            self.step += 1
-        return self.pageranks
+    def __calculatePageRank(self, transitions):
+        diff = 1.0
+        step = 0
 
-    #print sites
+        while diff > self.__delta:
+            step += 1
+            diff = 0.0
+            pageRank = list(np.array(np.asarray(np.matrix(self.__pageRanks[step - 1]) * np.matrix(transitions))).reshape(-1,)) # matrix to list
+            self.__pageRanks.append(pageRank)
+            for i in range(len(self.__linkStructure)):
+                diff += abs(self.__pageRanks[step][i] - self.__pageRanks[step-1][i])
+            self.__diffInStep.append(diff)
+
+    def getPageRank(self):
+        #create dictionary with sites as keys and pagerank as values
+        pageRank = {}
+        lastStep = len(self.__pageRanks) - 1
+        i = 0
+        for site in self.__linkStructure:
+            pageRank[site] = self.__pageRanks[lastStep][i]
+            i += 1
+        return pageRank
+
     def printPageRank(self):
-        pageranks = self.getPageRank()
+        #print name of sites
         sites = "            "
-        for site in sorted(self.linkStructure.keys()):
+        for site in sorted(self.__linkStructure.keys()):
             sites = sites + site + "       "
         sites = sites + "diff"
         print(sites)
 
-        #print pageranks
-        for i in range(self.step):
-            pageranks[i] = [str(format(x, '.4f')) for x in pageranks[i]]
-            print("step: " + str(i) + " " + str(pageranks[i]) + " " + str(format(self.diffInStep[i], '.4f')))
-
+        #print pageranks of sites
+        for i in range(len(self.__pageRanks)):
+            self.__pageRanks[i] = [str(format(x, '.4f')) for x in self.__pageRanks[i]]
+            print("step: " + str(i) + " " + str(self.__pageRanks[i]) + " " + str(format(self.__diffInStep[i], '.4f')))
